@@ -1,5 +1,6 @@
 pkg/*
 rdoc/*
+.idea/*
 *.gem
 .bundle
 .ruby-version
