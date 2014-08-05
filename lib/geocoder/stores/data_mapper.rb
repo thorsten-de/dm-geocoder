@@ -234,14 +234,14 @@ module Geocoder::Store
       end
 
       def primary_key
-        key.first
+        key.first.field
       end
 
       ##
       # Prepend table name if column name doesn't already contain one.
       #
       def full_column_name(column)
-        column = column.field
+        column = column.to_s
         column.include?(".") ? column : [storage_name, column].join(".")
       end
     end
