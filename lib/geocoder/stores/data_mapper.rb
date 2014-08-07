@@ -140,26 +140,32 @@ module Geocoder::Store
 
 
         records = []
+        geo_data = []
 
         repository.adapter.send(:with_connection) do |connection|
           reader = connection.create_command(sql).execute_reader(*bind_values)
           fields = properties.field_map.values_at(*reader.fields).compact
-          fields += [:distance, :bearing]
 
-          binding.pry
 
           begin
             while reader.next!
               records << Hash[ fields.zip(reader.values) ]
+              geo_data << reader.values(-2..-1)
+
             end
           ensure
             reader.close
           end
         end
 
+        binding.pry
         query = ::DataMapper::Query.new(repository, self, :fields => properties, :reload => false)
 
         c = ::DataMapper::Collection.new(query, query.model.load(records, query))
+        c.each_with_index do |item, index|
+          item.distance = geodata[index][0]
+          item.bearing = geodata[index][1]
+        end
         binding.pry
         c
       end
@@ -284,14 +290,11 @@ module Geocoder::Store
         if bearing
           fields << "#{bearing} AS #{bearing_column}"
         end
-        binding.pry
         fields
       end
 
       def select_fields(table, fields)
-        s = fields.join(', ')
-        binding.pry
-        s
+        fields.join(', ')
       end
 
       ##
