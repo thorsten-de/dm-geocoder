@@ -163,8 +163,8 @@ module Geocoder::Store
 
         c = ::DataMapper::Collection.new(query, query.model.load(records, query))
         c.each_with_index do |item, index|
-          item.distance = geodata[index][0]
-          item.bearing = geodata[index][1]
+          item.distance = geo_data[index][0]
+          item.bearing = geo_data[index][1]
         end
         binding.pry
         c
