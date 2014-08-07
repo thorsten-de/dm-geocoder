@@ -156,10 +156,10 @@ module Geocoder::Store
           end
         end
 
-        query = DataMapper::Query.new(repository, self,
+        query = ::DataMapper::Query.new(repository, self,
                           :fields => properties, :reload => options.fetch(:reload, false))
 
-        c = Collection.new(query, query.model.load(records, query))
+        c = ::DataMapper::Collection.new(query, query.model.load(records, query))
         binding.pry
         c
       end
