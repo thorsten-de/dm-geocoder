@@ -6,14 +6,29 @@ module Geocoder::Store
     include Base
 
 
-    attr_accessor :bearing, :distance
+    def bearing=(value)
+      @geocoder_bearing = value.to_f
+    end
+
+    def bearing
+      @geocoder_bearing
+      end
+
+    def distance=(value)
+      @geocoder_distance = value.to_f
+    end
+
+    def bearing
+      @geocoder_distance
+    end
+
+
 
     ##
     # Implementation of 'included' hook method.
     #
     def self.included(base)
       base.extend ClassMethods
-
     end
 
     ##
@@ -49,9 +64,12 @@ module Geocoder::Store
           # conditions enthält nun die Bedingung als String, und query_params sind nur noch die zu setzenden
           # parameter der Query
 
-          find_by_sql [
-              "SELECT #{options[:select]} FROM #{storage_name} WHERE #{conditions} ORDER BY #{options[:order]}",
+          by_sql do |m|
+            [ "SELECT #{options[:select]} FROM #{m} WHERE #{conditions} ORDER BY #{options[:order]}",
               *query_params]
+          end
+
+
 
           #select(options[:select]).where(options[:conditions]).
           #    order(options[:order])
@@ -59,7 +77,9 @@ module Geocoder::Store
           # If no lat/lon given we don't want any results, but we still
           # need distance and bearing columns so you can add, for example:
           # .order("distance")
-          find_by_sql "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{storage_name} WHERE #{false_condition}"
+          by_sql do |m|
+            "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{m} WHERE #{false_condition}"
+          end
           #select(select_clause(nil, "NULL", "NULL")).where(false_condition)
         end
       end
@@ -79,14 +99,18 @@ module Geocoder::Store
                         full_column_name(geocoder_options[:latitude]),
                         full_column_name(geocoder_options[:longitude])
                     )
-          find_by_sql "SELECT * FROM #{storage_name} WHERE #{cond}"
+          by_sql do |m|
+            "SELECT * FROM #{m} WHERE #{cond}"
+          end
           #where(Geocoder::Sql.within_bounding_box(
           #          sw_lat, sw_lng, ne_lat, ne_lng,
           #          full_column_name(geocoder_options[:latitude]),
           #          full_column_name(geocoder_options[:longitude])
           #      ))
         else
-          find_by_sql "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{storage_name} WHERE #{false_condition}"
+          by_sql do |m|
+            "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{m} WHERE #{false_condition}"
+          end
           #select(select_clause(nil, "NULL", "NULL")).where(false_condition)
         end
       }
@@ -101,9 +125,8 @@ module Geocoder::Store
 
       ## Get the Primary Key from the Resource
       def primary_key
-        key.first.field
         raise "You can'tdo geo-queries with DataMapper on objects with compound primary keys." if key.length > 1
-
+        key.first.field
       end
 
       private # ----------------------------------------------------------------
@@ -297,8 +320,5 @@ module Geocoder::Store
     end
 
     alias_method :fetch_address, :reverse_geocode
-
-
-
   end
 end
