@@ -99,7 +99,7 @@ module Geocoder::Store
                         full_column_name(geocoder_options[:longitude])
                     )
           by_sql do |m|
-            "SELECT #{m.*} FROM #{m} WHERE #{cond}"
+            "SELECT #{m}.* FROM #{m} WHERE #{cond}"
           end
           #where(Geocoder::Sql.within_bounding_box(
           #          sw_lat, sw_lng, ne_lat, ne_lng,
@@ -129,6 +129,40 @@ module Geocoder::Store
       end
 
       private # ----------------------------------------------------------------
+
+      def by_sql
+        case sql_or_query = yield(storage_name)
+          when Array
+            sql, *bind_values = sql_or_query
+          when String
+            sql, bind_values = sql_or_query, []
+        end
+
+
+        records = []
+
+        repository.adapter.send(:with_connection) do |connection|
+          reader = connection.create_command(sql).execute_reader(*bind_values)
+          fields = properties.field_map.values_at(*reader.fields).compact
+
+          binding.pry
+
+          begin
+            while reader.next!
+              records << Hash[ fields.zip(reader.values) ]
+            end
+          ensure
+            reader.close
+          end
+        end
+
+        query = Query.new(repository, self,
+                          :fields => properties, :reload => options.fetch(:reload, false))
+
+        c = Collection.new(query, query.model.load(records, query))
+        binding.pry
+        c
+      end
 
       ##
       # Get options hash suitable for passing to ActiveRecord.find to get
@@ -235,28 +269,29 @@ module Geocoder::Store
       def select_clause(columns, distance = nil, bearing = nil, distance_column = 'distance', bearing_column = 'bearing')
 
         if columns == :id_only
-          return [Proc.new { |table| table.send(primary_key) }]
+          return [ full_column_name(primary_key) ]
         elsif columns == :geo_only
           fields = []
         else
-          fields = (columns || [Proc.new { |table| table.* }])
+          fields = (columns || properties.field_map.keys.map { |column| full_column_name(column)})
         end
 
         if distance
           #clause += ", " unless clause.empty?
           #clause += "#{distance} AS #{distance_column}"
-          fields << Proc.new { |table| "#{distance} AS #{distance_column}" }
+          fields << "#{distance} AS #{distance_column}"
         end
         if bearing
-          fields << Proc.new { |table| "#{bearing} AS #{bearing_column}" }
+          fields << "#{bearing} AS #{bearing_column}"
         end
         binding.pry
         fields
       end
 
       def select_fields(table, fields)
+        s = fields.join(', ')
         binding.pry
-        fields.map {|field| field.call(table)}.join(', ')
+        s
       end
 
       ##
