@@ -7,7 +7,6 @@ module Geocoder
 
 
 
-      attr_accessor :bearing, :distance
 
 
 

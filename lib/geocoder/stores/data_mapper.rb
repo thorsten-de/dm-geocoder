@@ -5,6 +5,9 @@ module Geocoder::Store
   module DataMapper
     include Base
 
+
+    attr_accessor :bearing, :distance
+
     ##
     # Implementation of 'included' hook method.
     #
@@ -94,6 +97,13 @@ module Geocoder::Store
         if Geocoder::Calculations.coordinates_present?(latitude, longitude)
           distance_sql(latitude, longitude, *args)
         end
+      end
+
+      ## Get the Primary Key from the Resource
+      def primary_key
+        key.first.field
+        raise "You can'tdo geo-queries with DataMapper on objects with compound primary keys." if key.length > 1
+
       end
 
       private # ----------------------------------------------------------------
@@ -243,9 +253,6 @@ module Geocoder::Store
         using_sqlite? ? 0 : "false"
       end
 
-      def primary_key
-        key.first.field
-      end
 
       ##
       # Prepend table name if column name doesn't already contain one.
