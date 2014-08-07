@@ -9,7 +9,11 @@ module Geocoder::Store
     # Implementation of 'included' hook method.
     #
     def self.included(base)
-      base.extend ClassMethods      
+      base.extend ClassMethods
+
+      base.class_eval do
+        attr_accessor :bearing, :distance
+      end
     end
 
     ##
@@ -45,9 +49,9 @@ module Geocoder::Store
           # conditions enthält nun die Bedingung als String, und query_params sind nur noch die zu setzenden
           # parameter der Query
 
-          repository(:default).adapter.select(
+          find_by_sql [
               "SELECT #{options[:select]} FROM #{storage_name} WHERE #{conditions} ORDER BY #{options[:order]}",
-              *query_params)
+              *query_params]
 
           #select(options[:select]).where(options[:conditions]).
           #    order(options[:order])
@@ -55,7 +59,7 @@ module Geocoder::Store
           # If no lat/lon given we don't want any results, but we still
           # need distance and bearing columns so you can add, for example:
           # .order("distance")
-          repository(:default).adapter.select "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{storage_name} WHERE #{false_condition}"
+          find_by_sql "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{storage_name} WHERE #{false_condition}"
           #select(select_clause(nil, "NULL", "NULL")).where(false_condition)
         end
       end
@@ -75,14 +79,14 @@ module Geocoder::Store
                         full_column_name(geocoder_options[:latitude]),
                         full_column_name(geocoder_options[:longitude])
                     )
-          repository(:default).adapter.select "SELECT * FROM #{storage_name} WHERE #{cond}"
+          find_by_sql "SELECT * FROM #{storage_name} WHERE #{cond}"
           #where(Geocoder::Sql.within_bounding_box(
           #          sw_lat, sw_lng, ne_lat, ne_lng,
           #          full_column_name(geocoder_options[:latitude]),
           #          full_column_name(geocoder_options[:longitude])
           #      ))
         else
-          repository(:default).adapter.select "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{storage_name} WHERE #{false_condition}"
+          find_by_sql "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{storage_name} WHERE #{false_condition}"
           #select(select_clause(nil, "NULL", "NULL")).where(false_condition)
         end
       }
