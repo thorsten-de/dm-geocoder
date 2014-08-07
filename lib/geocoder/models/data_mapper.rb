@@ -6,6 +6,11 @@ module Geocoder
       include Base
 
 
+
+      attr_accessor :bearing, :distance
+
+
+
       def self.included(base); base.extend(self); end
 
 
