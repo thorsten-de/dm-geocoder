@@ -235,11 +235,11 @@ module Geocoder::Store
       def select_clause(columns, distance = nil, bearing = nil, distance_column = 'distance', bearing_column = 'bearing')
 
         if columns == :id_only
-          return [full_column_name(primary_key)]
+          return [Proc.new { |table| table.send(primary_key) }]
         elsif columns == :geo_only
           fields = []
         else
-          fields = (columns || [full_column_name("*")])
+          fields = (columns || [Proc.new { |table| table.* }])
         end
 
         if distance
@@ -288,9 +288,8 @@ module Geocoder::Store
       # Prepend table name if column name doesn't already contain one.
       #
       def full_column_name(column)
-        #column = column.to_s
-        #column.include?(".") ? column : [storage_name, column].join(".")
-        Proc.new { |table| table.send(column) }
+        column = column.to_s
+        column.include?(".") ? column : [storage_name, column].join(".")
       end
     end
 
