@@ -1,5 +1,6 @@
 require 'geocoder/sql'
 require 'geocoder/stores/base'
+require 'pry'
 
 module Geocoder::Store
   module DataMapper
@@ -249,10 +250,12 @@ module Geocoder::Store
         if bearing
           fields << Proc.new { |table| "#{bearing} AS #{bearing_column}" }
         end
+        binding.pry
         fields
       end
 
       def select_fields(table, fields)
+        binding.pry
         fields.map {|field| field.call(table)}.join(', ')
       end
 
