@@ -63,7 +63,7 @@ module Geocoder::Store
           # parameter der Query
 
           by_sql do |m|
-            [ "SELECT #{options[:select]} FROM #{m} WHERE #{conditions} ORDER BY #{options[:order]}",
+            [ "SELECT #{select_fields(m, options[:select])} FROM #{m} WHERE #{conditions} ORDER BY #{options[:order]}",
               *query_params]
           end
 
@@ -76,7 +76,7 @@ module Geocoder::Store
           # need distance and bearing columns so you can add, for example:
           # .order("distance")
           by_sql do |m|
-            "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{m} WHERE #{false_condition}"
+            "SELECT #{select_fields(m, select_clause(nil, "NULL", "NULL"))} FROM #{m} WHERE #{false_condition}"
           end
           #select(select_clause(nil, "NULL", "NULL")).where(false_condition)
         end
@@ -98,7 +98,7 @@ module Geocoder::Store
                         full_column_name(geocoder_options[:longitude])
                     )
           by_sql do |m|
-            "SELECT * FROM #{m} WHERE #{cond}"
+            "SELECT #{m.*} FROM #{m} WHERE #{cond}"
           end
           #where(Geocoder::Sql.within_bounding_box(
           #          sw_lat, sw_lng, ne_lat, ne_lng,
@@ -107,7 +107,7 @@ module Geocoder::Store
           #      ))
         else
           by_sql do |m|
-            "SELECT #{select_clause(nil, "NULL", "NULL")} FROM #{m} WHERE #{false_condition}"
+            "SELECT #{select_fields(select_clause(nil, "NULL", "NULL"))} FROM #{m} WHERE #{false_condition}"
           end
           #select(select_clause(nil, "NULL", "NULL")).where(false_condition)
         end
@@ -232,22 +232,28 @@ module Geocoder::Store
       # Generate the SELECT clause.
       #
       def select_clause(columns, distance = nil, bearing = nil, distance_column = 'distance', bearing_column = 'bearing')
+
         if columns == :id_only
-          return full_column_name(primary_key)
+          return [full_column_name(primary_key)]
         elsif columns == :geo_only
-          clause = ""
+          fields = []
         else
-          clause = (columns || full_column_name("*"))
+          fields = (columns || [full_column_name("*")])
         end
+
         if distance
-          clause += ", " unless clause.empty?
-          clause += "#{distance} AS #{distance_column}"
+          #clause += ", " unless clause.empty?
+          #clause += "#{distance} AS #{distance_column}"
+          fields << Proc.new { |table| "#{distance} AS #{distance_column}" }
         end
         if bearing
-          clause += ", " unless clause.empty?
-          clause += "#{bearing} AS #{bearing_column}"
+          fields << Proc.new { |table| "#{bearing} AS #{bearing_column}" }
         end
-        clause
+        fields
+      end
+
+      def select_fields(table, fields)
+        fields.map {|field| field.call(table)}.join(', ')
       end
 
       ##
@@ -279,8 +285,9 @@ module Geocoder::Store
       # Prepend table name if column name doesn't already contain one.
       #
       def full_column_name(column)
-        column = column.to_s
-        column.include?(".") ? column : [storage_name, column].join(".")
+        #column = column.to_s
+        #column.include?(".") ? column : [storage_name, column].join(".")
+        Proc.new { |table| table.send(column) }
       end
     end
 
