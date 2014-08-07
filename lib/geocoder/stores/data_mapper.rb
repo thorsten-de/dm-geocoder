@@ -125,7 +125,7 @@ module Geocoder::Store
 
       ## Get the Primary Key from the Resource
       def primary_key
-        raise "You can'tdo geo-queries with DataMapper on objects with compound primary keys." if key.length > 1
+        raise "You can'tdo geo-queries with DataMapper on objects with compound primary keys." if key.count > 1
         key.first.field
       end
 
