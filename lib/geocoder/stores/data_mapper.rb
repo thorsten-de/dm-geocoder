@@ -150,7 +150,7 @@ module Geocoder::Store
           begin
             while reader.next!
               records << Hash[ fields.zip(reader.values) ]
-              geo_data << reader.values(-2..-1)
+              geo_data << reader.values[-2..-1]
 
             end
           ensure
