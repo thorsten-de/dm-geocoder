@@ -12,13 +12,13 @@ module Geocoder::Store
 
     def bearing
       @geocoder_bearing
-      end
+    end
 
     def distance=(value)
       @geocoder_distance = value.to_f
     end
 
-    def bearing
+    def distance
       @geocoder_distance
     end
 
