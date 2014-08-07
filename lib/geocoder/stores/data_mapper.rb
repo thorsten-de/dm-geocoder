@@ -7,22 +7,20 @@ module Geocoder::Store
 
 
     def bearing=(value)
-      @geocoder_bearing = value.to_f
+      @bearing = value.to_f
     end
 
     def bearing
-      @geocoder_bearing
+      @bearing
     end
 
     def distance=(value)
-      @geocoder_distance = value.to_f
+      @distance = value.to_f
     end
 
     def distance
-      @geocoder_distance
+      @distance
     end
-
-
 
     ##
     # Implementation of 'included' hook method.
