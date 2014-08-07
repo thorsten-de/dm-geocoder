@@ -38,7 +38,16 @@ module Geocoder::Store
         if Geocoder::Calculations.coordinates_present?(latitude, longitude)
           options = near_scope_options(latitude, longitude, *args)
 
-          repository(:default).adapter.select "SELECT #{options[:select]} FROM #{storage_name} WHERE #{options[:conditions]} ORDER BY #{options[:order]}"
+          # conditions ist ein Array, in dem am Anfang die Bedingungen als SQL-String liegen und dann
+          # die einzelnen Parameter in den Bedingungen folgen. Daher wird das jetzt auseinandergenommen.
+          query_params = options[:conditions]
+          conditions = query_params.slice!(0)
+          # conditions enthält nun die Bedingung als String, und query_params sind nur noch die zu setzenden
+          # parameter der Query
+
+          repository(:default).adapter.select(
+              "SELECT #{options[:select]} FROM #{storage_name} WHERE #{conditions} ORDER BY #{options[:order]}",
+              *query_params)
 
           #select(options[:select]).where(options[:conditions]).
           #    order(options[:order])
@@ -61,7 +70,7 @@ module Geocoder::Store
       define_method :within_bounding_box, lambda{ |bounds|
         sw_lat, sw_lng, ne_lat, ne_lng = bounds.flatten if bounds
         if sw_lat && sw_lng && ne_lat && ne_lng
-          cond = Geocoder::Sql.within_bounding_box(
+          cond = Geocoder::Sql.within_  bounding_box(
                         sw_lat, sw_lng, ne_lat, ne_lng,
                         full_column_name(geocoder_options[:latitude]),
                         full_column_name(geocoder_options[:longitude])
