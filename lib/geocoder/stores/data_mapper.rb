@@ -144,6 +144,7 @@ module Geocoder::Store
         repository.adapter.send(:with_connection) do |connection|
           reader = connection.create_command(sql).execute_reader(*bind_values)
           fields = properties.field_map.values_at(*reader.fields).compact
+          fields += [:distance, :bearing]
 
           binding.pry
 
