@@ -1,6 +1,5 @@
 require 'geocoder/sql'
 require 'geocoder/stores/base'
-require 'pry'
 
 module Geocoder::Store
   module DataMapper
@@ -157,8 +156,7 @@ module Geocoder::Store
             reader.close
           end
         end
-
-        binding.pry
+        
         query = ::DataMapper::Query.new(repository, self, :fields => properties, :reload => false)
 
         c = ::DataMapper::Collection.new(query, query.model.load(records, query))
@@ -166,7 +164,6 @@ module Geocoder::Store
           item.distance = geo_data[index][0]
           item.bearing = geo_data[index][1]
         end
-        binding.pry
         c
       end
 
